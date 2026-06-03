@@ -1,11 +1,6 @@
--- KH UI Library for Roblox
--- Mobile + PC Support | Draggable | Tabs | Toggles | Sliders | Dropdowns
--- Usage: local UI = loadstring(game:HttpGet("..."))()
-
 local KH = {}
 KH.__index = KH
 
--- Services
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -14,7 +9,6 @@ local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Theme
 local Theme = {
     Background    = Color3.fromRGB(15, 15, 18),
     Surface       = Color3.fromRGB(22, 22, 27),
@@ -33,7 +27,6 @@ local Theme = {
     TabInactive   = Color3.fromRGB(30, 30, 38),
 }
 
--- Utility
 local function Tween(obj, props, duration, style, direction)
     duration  = duration  or 0.15
     style     = style     or Enum.EasingStyle.Quad
@@ -73,9 +66,6 @@ local function Padding(top, right, bottom, left)
     })
 end
 
--- ─────────────────────────────────────────────
--- WINDOW
--- ─────────────────────────────────────────────
 function KH.new(config)
     config = config or {}
     local self = setmetatable({}, KH)
@@ -87,7 +77,6 @@ function KH.new(config)
     self.Tabs     = {}
     self.ActiveTab = nil
 
-    -- Root ScreenGui
     local ScreenGui = Create("ScreenGui", {
         Name             = "KH_UILib",
         ResetOnSpawn     = false,
@@ -101,7 +90,6 @@ function KH.new(config)
     end
     self.ScreenGui = ScreenGui
 
-    -- Main Frame
     local Main = Create("Frame", {
         Name              = "Main",
         Size              = UDim2.new(0, self.Width, 0, self.Height),
@@ -113,7 +101,6 @@ function KH.new(config)
     }, { Corner(10), Stroke(Theme.Border, 1.5) })
     self.Main = Main
 
-    -- Gradient top bar accent line
     local AccentLine = Create("Frame", {
         Size             = UDim2.new(1, 0, 0, 2),
         Position         = UDim2.new(0, 0, 0, 0),
@@ -131,7 +118,6 @@ function KH.new(config)
         Parent = AccentLine,
     })
 
-    -- Title Bar
     local TitleBar = Create("Frame", {
         Name             = "TitleBar",
         Size             = UDim2.new(1, 0, 0, 48),
@@ -142,7 +128,6 @@ function KH.new(config)
         Parent           = Main,
     })
 
-    -- Logo / Title text
     local LogoLabel = Create("TextLabel", {
         Size             = UDim2.new(0, 40, 1, 0),
         Position         = UDim2.new(0, 14, 0, 0),
@@ -169,7 +154,6 @@ function KH.new(config)
         Parent           = TitleBar,
     })
 
-    -- Close Button
     local CloseBtn = Create("TextButton", {
         Size             = UDim2.new(0, 28, 0, 28),
         Position         = UDim2.new(1, -36, 0.5, -14),
@@ -189,7 +173,6 @@ function KH.new(config)
         ScreenGui:Destroy()
     end)
 
-    -- Minimize Button
     self._minimized = false
     local MinBtn = Create("TextButton", {
         Size             = UDim2.new(0, 28, 0, 28),
@@ -213,7 +196,6 @@ function KH.new(config)
         end
     end)
 
-    -- Tab Bar
     local TabBar = Create("Frame", {
         Name             = "TabBar",
         Size             = UDim2.new(1, 0, 0, 36),
@@ -243,7 +225,6 @@ function KH.new(config)
     })
     self.TabList = TabList
 
-    -- Content Area (scrollable)
     local ContentArea = Create("Frame", {
         Name             = "ContentArea",
         Size             = UDim2.new(1, 0, 1, -88),
@@ -254,7 +235,6 @@ function KH.new(config)
     })
     self.ContentArea = ContentArea
 
-    -- ── DRAGGING ──────────────────────────────
     local dragging, dragStart, startPos = false, nil, nil
 
     local function beginDrag(input)
@@ -278,7 +258,6 @@ function KH.new(config)
         dragging = false
     end
 
-    -- PC drag
     TitleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             beginDrag(input)
@@ -295,7 +274,6 @@ function KH.new(config)
         end
     end)
 
-    -- Mobile drag (Touch)
     TitleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.Touch then
             beginDrag(input)
@@ -312,21 +290,16 @@ function KH.new(config)
         end
     end)
 
-    -- Open animation
     Main.Size = UDim2.new(0, self.Width, 0, 0)
     Tween(Main, { Size = UDim2.new(0, self.Width, 0, self.Height) }, 0.3, Enum.EasingStyle.Back)
 
     return self
 end
 
--- ─────────────────────────────────────────────
--- TAB
--- ─────────────────────────────────────────────
 function KH:AddTab(name, icon)
     local tab = {}
     tab.Name = name
 
-    -- Tab Button
     local TabBtn = Create("TextButton", {
         Size             = UDim2.new(0, 0, 1, 0),
         AutomaticSize    = Enum.AutomaticSize.X,
@@ -340,7 +313,6 @@ function KH:AddTab(name, icon)
         Parent           = self.TabList,
     }, { Corner(5), Padding(0, 10, 0, 10) })
 
-    -- Tab Content (ScrollingFrame)
     local TabContent = Create("ScrollingFrame", {
         Name                    = "Tab_" .. name,
         Size                    = UDim2.new(1, 0, 1, 0),
@@ -364,13 +336,13 @@ function KH:AddTab(name, icon)
     tab.Button  = TabBtn
 
     local function activate()
-        -- Deactivate all
+
         for _, t in ipairs(self.Tabs) do
             t.Content.Visible = false
             Tween(t.Button, { BackgroundColor3 = Theme.TabInactive }, 0.12)
             Tween(t.Button, { TextColor3 = Theme.TextSecondary }, 0.12)
         end
-        -- Activate this
+
         TabContent.Visible = true
         Tween(TabBtn, { BackgroundColor3 = Theme.TabActive }, 0.12)
         Tween(TabBtn, { TextColor3 = Theme.TextPrimary }, 0.12)
@@ -382,7 +354,6 @@ function KH:AddTab(name, icon)
     table.insert(self.Tabs, tab)
     if #self.Tabs == 1 then activate() end
 
-    -- ── SECTION ───────────────────────────────
     function tab:AddSection(sectionName)
         local section = {}
 
@@ -398,7 +369,6 @@ function KH:AddTab(name, icon)
             Parent           = TabContent,
         }, { Padding(2, 0, 2, 4) })
 
-        -- ── TOGGLE ────────────────────────────
         function section:AddToggle(config)
             config = config or {}
             local label    = config.Label    or "Toggle"
@@ -453,7 +423,6 @@ function KH:AddTab(name, icon)
                 callback(state)
             end
 
-            -- PC click
             Row.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1
                 or input.UserInputType == Enum.UserInputType.Touch then
@@ -470,7 +439,6 @@ function KH:AddTab(name, icon)
             return toggle
         end
 
-        -- ── SLIDER ────────────────────────────
         function section:AddSlider(config)
             config = config or {}
             local label    = config.Label    or "Slider"
@@ -593,7 +561,6 @@ function KH:AddTab(name, icon)
             return slider
         end
 
-        -- ── DROPDOWN ──────────────────────────
         function section:AddDropdown(config)
             config = config or {}
             local label    = config.Label    or "Dropdown"
@@ -693,14 +660,14 @@ function KH:AddTab(name, icon)
                 OptBtn.MouseButton1Click:Connect(function()
                     selected       = opt
                     SelLabel.Text  = opt
-                    -- reset colors
+
                     for _, c in ipairs(DropList:GetChildren()) do
                         if c:IsA("TextButton") then
                             c.TextColor3 = Theme.TextSecondary
                         end
                     end
                     OptBtn.TextColor3 = Theme.Accent
-                    -- close
+
                     open = false
                     Tween(DropFrame, { Size = UDim2.new(1, 0, 0, 0) }, 0.15)
                     Arrow.Text = "▾"
@@ -732,7 +699,6 @@ function KH:AddTab(name, icon)
             return dropdown
         end
 
-        -- ── BUTTON ────────────────────────────
         function section:AddButton(config)
             config = config or {}
             local label    = config.Label    or "Button"
@@ -774,7 +740,6 @@ function KH:AddTab(name, icon)
             end)
         end
 
-        -- ── TEXTBOX ───────────────────────────
         function section:AddTextbox(config)
             config = config or {}
             local label       = config.Label       or "Input"
@@ -827,7 +792,6 @@ function KH:AddTab(name, icon)
             return tb
         end
 
-        -- ── LABEL ─────────────────────────────
         function section:AddLabel(text)
             Create("TextLabel", {
                 Size             = UDim2.new(1, 0, 0, 24),
@@ -849,9 +813,6 @@ function KH:AddTab(name, icon)
     return tab
 end
 
--- ─────────────────────────────────────────────
--- NOTIFICATION
--- ─────────────────────────────────────────────
 function KH:Notify(config)
     config = config or {}
     local title   = config.Title   or "Notification"
@@ -906,7 +867,6 @@ function KH:Notify(config)
         Parent           = NotifFrame,
     })
 
-    -- Slide in
     Tween(NotifFrame, { Position = UDim2.new(1, -270, 1, -70) }, 0.3, Enum.EasingStyle.Back)
 
     task.delay(duration, function()
@@ -916,9 +876,6 @@ function KH:Notify(config)
     end)
 end
 
--- ─────────────────────────────────────────────
--- KEYBIND TOGGLE (hide/show window)
--- ─────────────────────────────────────────────
 function KH:SetToggleKey(key)
     key = key or Enum.KeyCode.RightShift
     local visible = true
@@ -933,75 +890,3 @@ end
 
 return KH
 
-
---[[
-═══════════════════════════════════════════════
-USAGE EXAMPLE:
-═══════════════════════════════════════════════
-
-local KH = loadstring(game:HttpGet("YOUR_RAW_URL"))()
-
-local Window = KH.new({
-    Title    = "KH",
-    Subtitle = "Combat · Aim assist · Flickbot · Ragebot",
-    Width    = 520,
-    Height   = 380,
-})
-
-Window:SetToggleKey(Enum.KeyCode.RightShift)
-
--- TAB 1
-local AimbotTab = Window:AddTab("Aimbot", "🎯")
-local General   = AimbotTab:AddSection("General")
-
-General:AddToggle({
-    Label    = "Enabled",
-    Default  = false,
-    Callback = function(v) print("Aimbot:", v) end,
-})
-
-General:AddToggle({
-    Label    = "Disable On Reload",
-    Default  = true,
-})
-
-General:AddSlider({
-    Label    = "Reaction Time (s)",
-    Min      = 0,
-    Max      = 100,
-    Default  = 0,
-    Callback = function(v) print("RT:", v) end,
-})
-
-General:AddSlider({
-    Label    = "Smoothing",
-    Min      = 1,
-    Max      = 10,
-    Default  = 1,
-})
-
-General:AddDropdown({
-    Label    = "Aimbot Type",
-    Options  = { "Linear", "Bezier", "Snap" },
-    Default  = "Linear",
-    Callback = function(v) print("Type:", v) end,
-})
-
-General:AddButton({
-    Label    = "Reset Settings",
-    Callback = function() print("Reset!") end,
-})
-
--- TAB 2
-local TriggerTab = Window:AddTab("Triggerbot", "⚡")
-local TSection   = TriggerTab:AddSection("Settings")
-TSection:AddToggle({ Label = "Enabled", Default = false })
-TSection:AddSlider({ Label = "Delay (ms)", Min = 0, Max = 500, Default = 50 })
-
--- NOTIFICATION
-Window:Notify({
-    Title   = "KH Loaded",
-    Message = "UI Library ready · RightShift to toggle",
-    Duration = 4,
-})
-]]
